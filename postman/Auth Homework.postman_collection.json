@@ -1,0 +1,84 @@
+{
+  "info": {
+    "name": "Auth Homework",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "auth_base_url", "value": "http://localhost:8000"},
+    {"key": "message_base_url", "value": "http://localhost:8001"},
+    {"key": "email", "value": "user@example.com"},
+    {"key": "password", "value": "StrongPass123!"},
+    {"key": "token", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{auth_base_url}}/register",
+          "host": ["{{auth_base_url}}"],
+          "path": ["register"]
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  const json = pm.response.json();",
+              "  pm.collectionVariables.set('token', json.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{auth_base_url}}/login",
+          "host": ["{{auth_base_url}}"],
+          "path": ["login"]
+        }
+      }
+    },
+    {
+      "name": "Create message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Привет, это сообщение из Postman\"\n}"
+        },
+        "url": {
+          "raw": "{{message_base_url}}/messages",
+          "host": ["{{message_base_url}}"],
+          "path": ["messages"]
+        }
+      }
+    }
+  ]
+}
