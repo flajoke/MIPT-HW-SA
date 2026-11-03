@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: auth_hw_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-auth_demo}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-auth_demo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth_service:
+    build:
+      context: ./auth_service
+    container_name: auth_service
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-auth_demo}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${AUTH_PORT:-8000}:8000"
+
+  message_service:
+    build:
+      context: ./message_service
+    container_name: message_service
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-auth_demo}
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${MESSAGE_PORT:-8001}:8001"
+
+volumes:
+  postgres_data:
